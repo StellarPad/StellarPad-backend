@@ -194,3 +194,11 @@ model Review {
   @@index([targetId])
   @@index([rating])
 }
+
+// ─── Ingestion Cursor ─────────────────────────────────────────────────────────
+
+model IngestionCursor {
+  key             String   @id                  // e.g. 'ingestion_cursor'
+  ledgerSequence  Int
+  updatedAt       DateTime @updatedAt
+}
