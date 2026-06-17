@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum ListingMode {
+  SHORT_TERM  // Escrowed deposit stays (nightly / weekly)
+  LONG_TERM   // Streamed rent payment leases
+  SALE        // Direct on-chain deed transfer
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  COMPLETED
+  CANCELLED
+}
+
+enum EscrowStatus {
+  LOCKED
+  RELEASED
+  REFUNDED
+  DISPUTED
+}
+
+enum LeaseStatus {
+  ACTIVE
+  PAUSED
+  TERMINATED
+  COMPLETED
+}
+
+// ─── User ───────────────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(cuid())
+  stellarAddress  String   @unique                // Stellar public key (G...)
+  displayName     String?
+  avatarUrl       String?
+  emailHash       String?  @unique                // Hashed email for notifications (never raw)
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  listings        Listing[]
+  reservations    Reservation[]
+  reviewsGiven    Review[]       @relation("ReviewAuthor")
+  reviewsReceived Review[]       @relation("ReviewTarget")
+
+  @@index([stellarAddress])
+}
+
+// ─── Listing ─────────────────────────────────────────────────────────────────
+
+model Listing {
+  id                 String      @id @default(cuid())
+  onChainId          String      @unique            // u128 from Soroban as string
+  hostId             String
+  mode               ListingMode
+  title              String
+  description        String      @db.Text
+  country            String
+  city               String
+  address            String
+  latitude           Decimal     @db.Decimal(10, 7)
+  longitude          Decimal     @db.Decimal(10, 7)
+  imageUrls          String[]                       // IPFS CIDs or gateway URLs
+  amenities          String[]
+  maxGuests          Int         @default(1)
+  tokenAddress       String                         // XLM or custom Soroban token
+  ratePerUnit        String                         // i128 as string (lamports)
+  depositRequired    String      @default("0")      // i128 as string
+  isActive           Boolean     @default(true)
+  lastSyncedAt       DateTime    @default(now())    // Last on-chain event ingestion
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  // Relations
+  host               User          @relation(fields: [hostId], references: [id])
+  reservations       Reservation[]
+  escrows            Escrow[]
+  reviews            Review[]
+
+  @@index([hostId])
+  @@index([mode])
+  @@index([city, country])
+  @@index([isActive])
+}
+
+// ─── Reservation ─────────────────────────────────────────────────────────────
+
+model Reservation {
+  id              String            @id @default(cuid())
+  listingId       String
+  guestId         String
+  status          ReservationStatus @default(PENDING)
+  checkIn         DateTime
+  checkOut        DateTime
+  totalAmount     String                              // i128 as string
+  txHash          String?           @unique           // Stellar transaction hash
+  onChainRef      String?                             // Soroban reservation ID
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  listing         Listing   @relation(fields: [listingId], references: [id])
+  guest           User      @relation(fields: [guestId], references: [id])
+  escrow          Escrow?
+
+  @@index([listingId])
+  @@index([guestId])
+  @@index([status])
+  @@index([checkIn, checkOut])
+}
+
+// ─── Escrow ───────────────────────────────────────────────────────────────────
+
+model Escrow {
+  id              String       @id @default(cuid())
+  listingId       String
+  reservationId   String       @unique
+  depositorAddress String                           // Stellar address of payer
+  amount          String                            // i128 as string
+  tokenAddress    String
+  status          EscrowStatus @default(LOCKED)
+  lockedAt        DateTime     @default(now())
+  releasedAt      DateTime?
+  onChainEscrowId String?      @unique              // Soroban escrow contract ID
+  txHashLock      String?                           // Lock tx hash
+  txHashRelease   String?                           // Release/refund tx hash
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  listing         Listing     @relation(fields: [listingId], references: [id])
+  reservation     Reservation @relation(fields: [reservationId], references: [id])
+
+  @@index([listingId])
+  @@index([status])
+  @@index([depositorAddress])
+}
+
+// ─── Lease (Long-term stream) ─────────────────────────────────────────────────
+
+model Lease {
+  id              String      @id @default(cuid())
+  listingId       String
+  tenantAddress   String
+  hostAddress     String
+  ratePerSecond   String                            // i128 streamed amount
+  tokenAddress    String
+  startedAt       DateTime
+  endedAt         DateTime?
+  status          LeaseStatus @default(ACTIVE)
+  onChainLeaseId  String?     @unique
+  totalStreamed    String      @default("0")        // i128 cumulative
+  lastSyncedAt    DateTime    @default(now())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([tenantAddress])
+  @@index([hostAddress])
+  @@index([status])
+}
+
+// ─── Review ───────────────────────────────────────────────────────────────────
+
+model Review {
+  id            String   @id @default(cuid())
+  listingId     String
+  authorId      String                             // Reviewer (guest or host)
+  targetId      String                             // Reviewed party
+  rating        Int                                // 1–5
+  comment       String   @db.Text
+  isVerified    Boolean  @default(false)           // True if linked to completed reservation
+  txHash        String?  @unique                   // Soroban attestation tx (optional)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  listing       Listing @relation(fields: [listingId], references: [id])
+  author        User    @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target        User    @relation("ReviewTarget", fields: [targetId], references: [id])
+
+  @@index([listingId])
+  @@index([authorId])
+  @@index([targetId])
+  @@index([rating])
+}
