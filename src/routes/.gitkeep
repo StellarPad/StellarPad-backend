@@ -1,0 +1,2 @@
+// Routes wire HTTP methods and paths to controllers
+export {};

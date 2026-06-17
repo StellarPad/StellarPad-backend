@@ -1,0 +1,2 @@
+// Workers handle background jobs: event ingestion, blockchain sync
+export {};
