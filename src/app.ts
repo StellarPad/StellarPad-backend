@@ -21,9 +21,11 @@ app.get('/health', (_req, res) => {
 // ── Routes (mounted in subsequent steps) ─────────────────────────────────────
 import txRouter from './routes/tx.routes';
 import listingsRouter from './routes/listings.routes';
+import analyticsRouter from './routes/analytics.routes';
 
 app.use('/api/tx', txRouter);
 app.use('/api/listings', listingsRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
