@@ -105,7 +105,8 @@ model Reservation {
   checkOut        DateTime
   totalAmount     String                              // i128 as string
   txHash          String?           @unique           // Stellar transaction hash
-  onChainRef      String?                             // Soroban reservation ID
+  onChainRef      String?           @unique           // Soroban reservation ID
+  lastSyncedAt    DateTime          @default(now())
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
