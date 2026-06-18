@@ -20,8 +20,10 @@ app.get('/health', (_req, res) => {
 
 // ── Routes (mounted in subsequent steps) ─────────────────────────────────────
 import txRouter from './routes/tx.routes';
+import listingsRouter from './routes/listings.routes';
 
 app.use('/api/tx', txRouter);
+app.use('/api/listings', listingsRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
