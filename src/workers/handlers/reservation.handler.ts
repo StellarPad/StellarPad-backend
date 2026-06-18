@@ -87,3 +87,37 @@ export async function handleBookingConfirmed(event: ParsedEvent): Promise<void> 
 
   console.log(`[reservation-handler] confirmed reservation onChainRef=${onChainRef}`);
 }
+
+/**
+ * Handles `escrow_disputed` — marks the escrow as DISPUTED so UI can freeze funds.
+ */
+export async function handleEscrowDisputed(event: ParsedEvent): Promise<void> {
+  const d = event.data;
+  const escrowOnChainId = String(d['escrow_id'] ?? d['onchain_escrow_id'] ?? '');
+  const reservationOnChainRef = String(d['reservation_id'] ?? '');
+  const txHash = event.txHash;
+
+  let escrow = null;
+  if (escrowOnChainId) {
+    escrow = await prisma.escrow.findUnique({ where: { onChainEscrowId: escrowOnChainId } });
+  }
+
+  if (!escrow && reservationOnChainRef) {
+    const reservation = await prisma.reservation.findUnique({ where: { onChainRef: reservationOnChainRef } });
+    if (reservation) {
+      escrow = await prisma.escrow.findUnique({ where: { reservationId: reservation.id } });
+    }
+  }
+
+  if (!escrow) {
+    console.warn(`[reservation-handler] escrow not found for escrowOnChainId=${escrowOnChainId} reservationOnChainRef=${reservationOnChainRef}`);
+    return;
+  }
+
+  await prisma.escrow.update({
+    where: { id: escrow.id },
+    data: { status: EscrowStatus.DISPUTED, txHashRelease: txHash },
+  });
+
+  console.log(`[reservation-handler] flagged escrow id=${escrow.id} onChainEscrowId=${escrowOnChainId} as DISPUTED`);
+}

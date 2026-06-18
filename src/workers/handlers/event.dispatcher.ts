@@ -1,7 +1,7 @@
 import { filterAndParseEvents } from '../event.parser';
 import type { SorobanEvent, ParsedEvent } from '../event.parser';
 import { handleListingCreated, handleListingUpdated } from './listing.handler';
-import { handleReservationMade, handleBookingConfirmed } from './reservation.handler';
+import { handleReservationMade, handleBookingConfirmed, handleEscrowDisputed } from './reservation.handler';
 
 type EventHandler = (event: ParsedEvent) => Promise<void>;
 
@@ -11,6 +11,7 @@ const HANDLERS: Record<string, EventHandler> = {
   // Reservation and booking handlers
   reservation_made: handleReservationMade,
   booking_confirmed: handleBookingConfirmed,
+  escrow_disputed: handleEscrowDisputed,
 };
 
 export async function processContractEvents(events: SorobanEvent[]): Promise<void> {
