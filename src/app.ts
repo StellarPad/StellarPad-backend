@@ -22,10 +22,12 @@ app.get('/health', (_req, res) => {
 import txRouter from './routes/tx.routes';
 import listingsRouter from './routes/listings.routes';
 import analyticsRouter from './routes/analytics.routes';
+import usersRouter from './routes/users.routes';
 
 app.use('/api/tx', txRouter);
 app.use('/api/listings', listingsRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/users', usersRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
