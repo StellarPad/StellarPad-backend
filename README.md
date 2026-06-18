@@ -1,5 +1,9 @@
 # StellarPad
 
+<p align="center">
+  <img src="./assets/logo.svg" alt="StellarPad Logo" width="160" />
+</p>
+
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/StellarPad/StellarPad-backend/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-NA-lightgrey)](#)
