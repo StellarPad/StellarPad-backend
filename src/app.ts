@@ -1,9 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
+import morgan from 'morgan';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
+
+// ── Performance ─────────────────────────────────────────────────────────────────
+app.use(compression());
+app.use(morgan(process.env['NODE_ENV'] === 'production' ? 'combined' : 'dev'));
 
 // ── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet());

@@ -9,6 +9,7 @@ function createPrismaClient() {
     // @ts-expect-error: Prisma v7 accepts datasourceUrl at runtime even though typings vary
     datasourceUrl: env.DATABASE_URL,
     log: env.NODE_ENV === 'development' ? ['query', 'warn', 'error'] : ['error'],
+    datasources: { db: { url: env.DATABASE_URL } },
   });
 }
 
