@@ -16,4 +16,8 @@ export const env = {
   SOROBAN_RPC_URL:
     process.env['SOROBAN_RPC_URL'] ?? 'https://soroban-testnet.stellar.org',
   CONTRACT_ID: process.env['CONTRACT_ID'] ?? '',
+  STABLECOIN_USDC_ISSUER: process.env['STABLECOIN_USDC_ISSUER'] ?? '',
+  STABLECOIN_EURC_ISSUER: process.env['STABLECOIN_EURC_ISSUER'] ?? '',
+  FIAT_USD_ISSUER: process.env['FIAT_USD_ISSUER'] ?? '',
+  FIAT_EUR_ISSUER: process.env['FIAT_EUR_ISSUER'] ?? '',
 };
