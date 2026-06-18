@@ -19,7 +19,9 @@ app.get('/health', (_req, res) => {
 });
 
 // ── Routes (mounted in subsequent steps) ─────────────────────────────────────
-// app.use('/api/listings', listingsRouter);
+import txRouter from './routes/tx.routes';
+
+app.use('/api/tx', txRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
