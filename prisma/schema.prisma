@@ -143,10 +143,28 @@ model Escrow {
   // Relations
   listing         Listing     @relation(fields: [listingId], references: [id])
   reservation     Reservation @relation(fields: [reservationId], references: [id])
+  claims          EscrowClaim[]
 
   @@index([listingId])
   @@index([status])
   @@index([depositorAddress])
+}
+
+model EscrowClaim {
+  id               String   @id @default(cuid())
+  escrowId         String
+  claimantAddress  String
+  claimType        String   @default("DISPUTE")
+  status           String   @default("OPEN")
+  description      String   @db.Text
+  metadata         Json?
+  initiatedAt      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  escrow           Escrow   @relation(fields: [escrowId], references: [id])
+
+  @@index([escrowId])
+  @@index([claimantAddress])
 }
 
 // ─── Lease (Long-term stream) ─────────────────────────────────────────────────
