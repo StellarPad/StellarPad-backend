@@ -69,3 +69,29 @@ export async function searchListings(req: Request, res: Response): Promise<void>
 
   res.json({ total, items });
 }
+
+export async function getListingDetails(req: Request, res: Response): Promise<void> {
+  const id = req.params.id;
+
+  const listing = await prisma.listing.findFirst({
+    where: { OR: [{ id }, { onChainId: id }] },
+    include: {
+      host: { select: { id: true, stellarAddress: true, displayName: true, avatarUrl: true } },
+      reservations: {
+        orderBy: { checkIn: 'asc' },
+        include: { guest: { select: { stellarAddress: true, displayName: true } }, escrow: true },
+      },
+      escrows: {
+        where: { status: { in: ['LOCKED', 'DISPUTED'] } },
+      },
+      reviews: { take: 10, orderBy: { createdAt: 'desc' } },
+    },
+  });
+
+  if (!listing) {
+    res.status(404).json({ error: 'listing_not_found' });
+    return;
+  }
+
+  res.json({ listing });
+}
