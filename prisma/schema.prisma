@@ -63,6 +63,7 @@ model User {
 model Listing {
   id                 String      @id @default(cuid())
   onChainId          String      @unique            // u128 from Soroban as string
+  draftId            String?     @unique            // Temporary local draft listing reference
   hostId             String
   mode               ListingMode
   title              String
