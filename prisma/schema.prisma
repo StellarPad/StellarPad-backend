@@ -203,3 +203,13 @@ model IngestionCursor {
   ledgerSequence  Int
   updatedAt       DateTime @updatedAt
 }
+
+// Tracks processed event ids + txHash to ensure idempotent ingestion
+model IngestedEvent {
+  id        String   @id        // event.id from Soroban
+  txHash    String
+  createdAt DateTime @default(now())
+
+  @@unique([id, txHash])
+  @@index([txHash])
+}
