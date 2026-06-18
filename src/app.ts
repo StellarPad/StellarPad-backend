@@ -24,12 +24,14 @@ import listingsRouter from './routes/listings.routes';
 import analyticsRouter from './routes/analytics.routes';
 import usersRouter from './routes/users.routes';
 import authRouter from './routes/auth.routes';
+import dashboardRouter from './routes/dashboard.routes';
 
 app.use('/api/tx', txRouter);
 app.use('/api/listings', listingsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
