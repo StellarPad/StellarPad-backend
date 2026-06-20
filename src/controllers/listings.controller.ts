@@ -153,3 +153,44 @@ export async function archiveListing(req: Request, res: Response): Promise<void>
 
   res.json({ listing: updated });
 }
+
+export async function pinListingMetadata(req: Request, res: Response): Promise<void> {
+  const id = String(req.params['id'] ?? '');
+
+  const listing = await prisma.listing.findFirst({
+    where: { OR: [{ id }, { onChainId: id }] },
+    include: { host: { select: { stellarAddress: true, displayName: true } } },
+  });
+  if (!listing) throw new HttpError(404, 'listing_not_found');
+
+  const { pinJSON } = await import('../services/ipfs.service');
+
+  const metadata = {
+    name: listing.title,
+    description: listing.description,
+    image: listing.imageUrls[0] ?? '',
+    images: listing.imageUrls,
+    attributes: {
+      city: listing.city,
+      country: listing.country,
+      mode: listing.mode,
+      ratePerUnit: listing.ratePerUnit,
+      depositRequired: listing.depositRequired,
+      maxGuests: listing.maxGuests,
+      amenities: listing.amenities,
+      latitude: listing.latitude,
+      longitude: listing.longitude,
+    },
+    host: listing.host.stellarAddress,
+  };
+
+  const { ipfsHash, gatewayUrl } = await pinJSON(`listing-${listing.id}`, metadata);
+
+  // Persist the metadata URI on the listing
+  await prisma.listing.update({
+    where: { id: listing.id },
+    data: { lastSyncedAt: new Date() },
+  });
+
+  res.json({ ipfsHash, metadataUri: gatewayUrl });
+}

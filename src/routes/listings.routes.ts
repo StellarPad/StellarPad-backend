@@ -1,5 +1,5 @@
 import express from 'express';
-import { searchListings, getListingDetails, updateListing, publishListing, archiveListing } from '../controllers/listings.controller';
+import { searchListings, getListingDetails, updateListing, publishListing, archiveListing, pinListingMetadata } from '../controllers/listings.controller';
 import { listReservationsForListing } from '../controllers/reservations.controller';
 import { listLeasesForListing } from '../controllers/leases.controller';
 import { getListingReviews } from '../controllers/reviews.controller';
@@ -12,6 +12,7 @@ router.get('/:id', getListingDetails);
 router.patch('/:id', authenticate, updateListing);
 router.post('/:id/publish', authenticate, publishListing);
 router.post('/:id/archive', authenticate, archiveListing);
+router.post('/:id/metadata', authenticate, pinListingMetadata);
 router.get('/:listingId/reservations', authenticate, listReservationsForListing);
 router.get('/:listingId/leases', authenticate, listLeasesForListing);
 router.get('/:listingId/reviews', getListingReviews);
