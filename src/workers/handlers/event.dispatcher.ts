@@ -2,24 +2,37 @@ import { filterAndParseEvents } from '../event.parser';
 import type { SorobanEvent, ParsedEvent } from '../event.parser';
 import { handleListingCreated, handleListingUpdated } from './listing.handler';
 import { handleReservationMade, handleBookingConfirmed, handleEscrowDisputed } from './reservation.handler';
+import { handleEscrowLocked, handleEscrowReleased, handleEscrowRefunded } from './escrow.handler';
+import { handleLeaseStarted, handleLeaseTerminated } from './lease.handler';
+import { handleReviewPosted } from './review.handler';
 import { tryMarkIngested } from '../idempotency';
 
 type EventHandler = (event: ParsedEvent) => Promise<void>;
 
 const HANDLERS: Record<string, EventHandler> = {
+  // Listing events
   listing_created: handleListingCreated,
   listing_updated: handleListingUpdated,
-  // Reservation and booking handlers
+  // Reservation events
   reservation_made: handleReservationMade,
   booking_confirmed: handleBookingConfirmed,
+  reservation_confirmed: handleBookingConfirmed,
+  // Escrow events
+  escrow_locked: handleEscrowLocked,
   escrow_disputed: handleEscrowDisputed,
+  escrow_released: handleEscrowReleased,
+  escrow_refunded: handleEscrowRefunded,
+  // Lease events
+  lease_started: handleLeaseStarted,
+  lease_terminated: handleLeaseTerminated,
+  // Review events
+  review_posted: handleReviewPosted,
 };
 
 export async function processContractEvents(events: SorobanEvent[]): Promise<void> {
   const parsed = filterAndParseEvents(events);
 
   for (const event of parsed) {
-    // Idempotency guard: mark event+txHash as ingested; if already present, skip.
     try {
       const first = await tryMarkIngested(event.id, event.txHash);
       if (!first) {
@@ -28,13 +41,16 @@ export async function processContractEvents(events: SorobanEvent[]): Promise<voi
       }
     } catch (err) {
       console.error('[dispatcher] idempotency check failed:', err);
-      // proceed cautiously (do not process) — allow the worker to retry later
       continue;
     }
 
     const handler = HANDLERS[event.topic];
     if (handler) {
-      await handler(event);
+      try {
+        await handler(event);
+      } catch (err) {
+        console.error(`[dispatcher] handler error for topic=${event.topic} id=${event.id}:`, err);
+      }
     } else {
       console.log(`[dispatcher] unhandled topic="${event.topic}" id=${event.id}`);
     }
