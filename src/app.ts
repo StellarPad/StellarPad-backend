@@ -36,6 +36,7 @@ import listingWizardRouter from './routes/listingWizard.routes';
 import exchangeRouter from './routes/exchange.routes';
 import reservationsRouter from './routes/reservations.routes';
 import leasesRouter from './routes/leases.routes';
+import reviewsRouter from './routes/reviews.routes';
 
 app.use('/api/tx', txRouter);
 app.use('/api/listings', listingsRouter);
@@ -48,6 +49,7 @@ app.use('/api/listings', listingWizardRouter);
 app.use('/api/rates', exchangeRouter);
 app.use('/api/reservations', reservationsRouter);
 app.use('/api/leases', leasesRouter);
+app.use('/api/reviews', reviewsRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
