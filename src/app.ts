@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import { errorHandler } from './middlewares/errorHandler';
+import { prisma } from './config/prisma';
+import { sorobanRpc } from './services/stellar.service';
 
 const app = express();
 
@@ -20,8 +22,27 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // ── Health ────────────────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'stellar-pad-backend' });
+app.get('/health', async (_req, res) => {
+  const checks: Record<string, string> = { api: 'ok' };
+
+  // DB check
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    checks['db'] = 'ok';
+  } catch {
+    checks['db'] = 'error';
+  }
+
+  // Stellar RPC check
+  try {
+    const health = await sorobanRpc.getHealth();
+    checks['stellar'] = health.status === 'healthy' ? 'ok' : 'degraded';
+  } catch {
+    checks['stellar'] = 'error';
+  }
+
+  const allOk = Object.values(checks).every((v) => v === 'ok');
+  res.status(allOk ? 200 : 503).json({ status: allOk ? 'ok' : 'degraded', checks, ts: new Date().toISOString() });
 });
 
 // ── Routes (mounted in subsequent steps) ─────────────────────────────────────
