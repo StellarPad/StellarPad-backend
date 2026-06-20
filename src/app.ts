@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { errorHandler } from './middlewares/errorHandler';
 import { prisma } from './config/prisma';
 import { sorobanRpc } from './services/stellar.service';
+import { globalLimiter } from './middlewares/rateLimiter';
 
 const app = express();
 
@@ -20,6 +21,9 @@ app.use(cors({ origin: process.env['CORS_ORIGIN'] ?? '*', credentials: true }));
 // ── Parsing ───────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+app.use(globalLimiter);
 
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
