@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 import { ListingMode } from '@prisma/client';
+import { HttpError } from '../utils/HttpError';
 
 const MODE_ALIAS: Record<string, ListingMode | undefined> = {
   stays: ListingMode.SHORT_TERM,
@@ -94,4 +95,61 @@ export async function getListingDetails(req: Request, res: Response): Promise<vo
   }
 
   res.json({ listing });
+}
+
+export async function updateListing(req: Request, res: Response): Promise<void> {
+  const id = String(req.params['id'] ?? '');
+  const { title, description, city, country, address, imageUrls, amenities, maxGuests, ratePerUnit, depositRequired } = req.body;
+
+  const listing = await prisma.listing.findFirst({ where: { OR: [{ id }, { onChainId: id }] } });
+  if (!listing) throw new HttpError(404, 'listing_not_found');
+
+  // Ownership enforced at route level via authenticate; here we just update.
+  const updated = await prisma.listing.update({
+    where: { id: listing.id },
+    data: {
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(city !== undefined && { city }),
+      ...(country !== undefined && { country }),
+      ...(address !== undefined && { address }),
+      ...(imageUrls !== undefined && { imageUrls }),
+      ...(amenities !== undefined && { amenities }),
+      ...(maxGuests !== undefined && { maxGuests: Number(maxGuests) }),
+      ...(ratePerUnit !== undefined && { ratePerUnit: String(ratePerUnit) }),
+      ...(depositRequired !== undefined && { depositRequired: String(depositRequired) }),
+      lastSyncedAt: new Date(),
+    },
+  });
+
+  res.json({ listing: updated });
+}
+
+export async function publishListing(req: Request, res: Response): Promise<void> {
+  const id = String(req.params['id'] ?? '');
+
+  const listing = await prisma.listing.findFirst({ where: { OR: [{ id }, { onChainId: id }] } });
+  if (!listing) throw new HttpError(404, 'listing_not_found');
+  if (listing.isActive) throw new HttpError(409, 'listing_already_published');
+
+  const updated = await prisma.listing.update({
+    where: { id: listing.id },
+    data: { isActive: true, lastSyncedAt: new Date() },
+  });
+
+  res.json({ listing: updated });
+}
+
+export async function archiveListing(req: Request, res: Response): Promise<void> {
+  const id = String(req.params['id'] ?? '');
+
+  const listing = await prisma.listing.findFirst({ where: { OR: [{ id }, { onChainId: id }] } });
+  if (!listing) throw new HttpError(404, 'listing_not_found');
+
+  const updated = await prisma.listing.update({
+    where: { id: listing.id },
+    data: { isActive: false, lastSyncedAt: new Date() },
+  });
+
+  res.json({ listing: updated });
 }
