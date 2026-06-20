@@ -7,6 +7,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { prisma } from './config/prisma';
 import { sorobanRpc } from './services/stellar.service';
 import { globalLimiter } from './middlewares/rateLimiter';
+import { requestTimeout } from './middlewares/timeout';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // ── Rate Limiting ─────────────────────────────────────────────────────────────
 app.use(globalLimiter);
+app.use(requestTimeout(30_000));
 
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
