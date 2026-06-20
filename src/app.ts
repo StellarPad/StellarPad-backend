@@ -34,6 +34,7 @@ import dashboardRouter from './routes/dashboard.routes';
 import escrowRouter from './routes/escrow.routes';
 import listingWizardRouter from './routes/listingWizard.routes';
 import exchangeRouter from './routes/exchange.routes';
+import reservationsRouter from './routes/reservations.routes';
 
 app.use('/api/tx', txRouter);
 app.use('/api/listings', listingsRouter);
@@ -44,6 +45,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/escrows', escrowRouter);
 app.use('/api/listings', listingWizardRouter);
 app.use('/api/rates', exchangeRouter);
+app.use('/api/reservations', reservationsRouter);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
