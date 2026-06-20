@@ -1,8 +1,11 @@
 import express from 'express';
-import { createListingDraft } from '../controllers/listingWizard.controller';
+import { createListingDraft, getDraft, buildPublishXDR } from '../controllers/listingWizard.controller';
+import { authenticate } from '../middlewares/authenticate';
 
 const router = express.Router();
 
-router.post('/create', createListingDraft);
+router.post('/wizard/create', authenticate, createListingDraft);
+router.get('/wizard/:draftId', authenticate, getDraft);
+router.post('/wizard/publish-xdr', authenticate, buildPublishXDR);
 
 export default router;

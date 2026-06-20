@@ -13,7 +13,7 @@ const MODE_ALIAS: Record<string, ListingMode | undefined> = {
 };
 
 export async function searchListings(req: Request, res: Response): Promise<void> {
-  const { mode, minPrice, maxPrice, city, country, search } = req.query;
+  const { mode, minPrice, maxPrice, city, country, search, amenities, maxGuests } = req.query;
   const limit = Number(req.query.limit ?? 20);
   const offset = Number(req.query.offset ?? 0);
 
@@ -27,14 +27,21 @@ export async function searchListings(req: Request, res: Response): Promise<void>
   if (city && typeof city === 'string') where.city = { equals: city, mode: 'insensitive' };
   if (country && typeof country === 'string') where.country = { equals: country, mode: 'insensitive' };
 
+  if (maxGuests) where.maxGuests = { gte: Number(maxGuests) };
+
+  if (amenities && typeof amenities === 'string') {
+    const list = amenities.split(',').map((a) => a.trim()).filter(Boolean);
+    if (list.length) where.amenities = { hasEvery: list };
+  }
+
   if (search && typeof search === 'string') {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
       { description: { contains: search, mode: 'insensitive' } },
+      { city: { contains: search, mode: 'insensitive' } },
     ];
   }
 
-  // Note: ratePerUnit is stored as string; simple lexical comparisons may suffice for similar digit lengths.
   if ((minPrice && typeof minPrice === 'string') || (maxPrice && typeof maxPrice === 'string')) {
     where.AND = where.AND ?? [];
     if (minPrice && typeof minPrice === 'string') where.AND.push({ ratePerUnit: { gte: minPrice } });
@@ -49,20 +56,10 @@ export async function searchListings(req: Request, res: Response): Promise<void>
       take: limit,
       orderBy: { lastSyncedAt: 'desc' },
       select: {
-        id: true,
-        onChainId: true,
-        title: true,
-        description: true,
-        city: true,
-        country: true,
-        latitude: true,
-        longitude: true,
-        imageUrls: true,
-        ratePerUnit: true,
-        depositRequired: true,
-        mode: true,
-        isActive: true,
-        lastSyncedAt: true,
+        id: true, onChainId: true, title: true, description: true,
+        city: true, country: true, latitude: true, longitude: true,
+        imageUrls: true, amenities: true, maxGuests: true,
+        ratePerUnit: true, depositRequired: true, mode: true, isActive: true, lastSyncedAt: true,
         host: { select: { stellarAddress: true, displayName: true, avatarUrl: true } },
       },
     }),
