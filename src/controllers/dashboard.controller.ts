@@ -29,7 +29,7 @@ export async function getTenantDashboard(req: Request, res: Response): Promise<v
   ]);
 
   const activeStays = reservations.filter((reservation) =>
-    [ReservationStatus.CONFIRMED, ReservationStatus.CHECKED_IN].includes(reservation.status),
+    (['CONFIRMED', 'CHECKED_IN'] as string[]).includes(reservation.status),
   );
   const upcomingStays = reservations.filter((reservation) => reservation.status === ReservationStatus.PENDING);
   const completedStays = reservations.filter((reservation) => reservation.status === ReservationStatus.COMPLETED);

@@ -71,7 +71,7 @@ export async function searchListings(req: Request, res: Response): Promise<void>
 }
 
 export async function getListingDetails(req: Request, res: Response): Promise<void> {
-  const id = req.params.id;
+  const id = String(req.params['id'] ?? '');
 
   const listing = await prisma.listing.findFirst({
     where: { OR: [{ id }, { onChainId: id }] },

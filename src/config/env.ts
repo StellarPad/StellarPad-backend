@@ -20,4 +20,6 @@ export const env = {
   STABLECOIN_EURC_ISSUER: process.env['STABLECOIN_EURC_ISSUER'] ?? '',
   FIAT_USD_ISSUER: process.env['FIAT_USD_ISSUER'] ?? '',
   FIAT_EUR_ISSUER: process.env['FIAT_EUR_ISSUER'] ?? '',
+  JWT_SECRET: process.env['JWT_SECRET'] ?? 'change_me_in_production',
+  JWT_EXPIRES_IN: process.env['JWT_EXPIRES_IN'] ?? '1h',
 };

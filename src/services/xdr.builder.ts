@@ -34,5 +34,5 @@ export async function buildUnsignedBookingXDR(params: BookingParams): Promise<st
     .setTimeout(180)
     .build();
 
-  return tx.toXDR('base64');
+  return tx.toXDR();
 }

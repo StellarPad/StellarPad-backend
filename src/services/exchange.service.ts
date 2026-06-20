@@ -15,7 +15,7 @@ const STABLECOIN_ASSETS = {
 export async function fetchExchangeRates(): Promise<Record<string, ExchangeRateResult>> {
   const response = await fetch('https://api.exchangerate.host/latest?base=USD');
   if (!response.ok) throw new Error('failed to fetch fiat exchange rates');
-  const body = await response.json();
+  const body = (await response.json()) as { rates?: Record<string, number> };
   const usdToEur = body.rates?.EUR ?? 1;
 
   return {

@@ -3,7 +3,7 @@ import { prisma } from '../config/prisma';
 import { ReservationStatus, EscrowStatus } from '@prisma/client';
 
 export async function getUserReputation(req: Request, res: Response): Promise<void> {
-  const address = req.params.address;
+  const address = String(req.params['address'] ?? '');
   if (!address) {
     res.status(400).json({ error: 'missing_address' });
     return;
